@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "PCC Watchlist Filter",
+  "version": "1.0",
+  "description": "Toggle to show only films from your Letterboxd watchlist on Prince Charles Cinema's What's On page.",
+  "permissions": ["storage", "scripting"],
+  "host_permissions": ["https://princecharlescinema.com/whats-on/*"],
+  "action": {
+  "default_popup": "popup.html"
+
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://princecharlescinema.com/whats-on/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
