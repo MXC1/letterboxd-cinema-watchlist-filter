@@ -37,18 +37,23 @@ function unfilterFilms() {
 
 function addToggleButton() {
   // Only add if not already present
-  if (document.getElementById('pcc-watchlist-toggle')) return;
+  if (document.getElementById('pcc-watchlist-toggle-container')) return;
 
-  // Find the filter bar
-  const filterBar = document.querySelector('.jacro-filmsort-filter .filmsort-items');
-  if (!filterBar) return;
+  // Create a floating container for the buttons
+  const container = document.createElement('div');
+  container.id = 'pcc-watchlist-toggle-container';
+  container.style.position = 'fixed';
+  container.style.top = '20px';
+  container.style.right = '20px';
+  container.style.zIndex = '9999';
+  container.style.display = 'flex';
+  container.style.gap = '8px';
 
   // Toggle button styled as a span.button
   const btn = document.createElement('span');
   btn.id = 'pcc-watchlist-toggle';
   btn.className = 'button';
   btn.textContent = 'Toggle Watchlist Mode';
-  btn.style.marginLeft = '12px';
   btn.style.background = '#222';
   btn.style.color = '#fff';
   btn.style.borderRadius = '6px';
@@ -64,16 +69,12 @@ function addToggleButton() {
   gearBtn.className = 'button';
   gearBtn.title = 'Watchlist Settings';
   gearBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffb400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09c.7 0 1.31-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06c.46.46 1.12.6 1.82.33h.09c.7 0 1.31-.4 1.51-1V3a2 2 0 0 1 4 0v.09c0 .7.4 1.31 1 1.51.7.27 1.36.13 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82c.2.6.81 1 1.51 1H21a2 2 0 0 1 0 4h-.09c-.7 0-1.31.4-1.51 1z"/></svg>';
-  gearBtn.style.marginLeft = '8px';
-  gearBtn.style.background = '#222';
-  gearBtn.style.borderRadius = '6px';
-  gearBtn.style.padding = '8px';
-  gearBtn.style.cursor = 'pointer';
   gearBtn.style.display = 'inline-flex';
   gearBtn.style.alignItems = 'center';
 
-  filterBar.appendChild(btn);
-  filterBar.appendChild(gearBtn);
+  container.appendChild(btn);
+  container.appendChild(gearBtn);
+  document.body.appendChild(container);
 
   gearBtn.addEventListener('click', () => {
     alert('To open the Watchlist Settings, please click the extension icon in your browser toolbar. Chrome does not allow content scripts to open extension popups directly.');
