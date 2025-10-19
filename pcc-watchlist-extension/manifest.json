@@ -7,7 +7,11 @@
   "host_permissions": ["https://princecharlescinema.com/whats-on/*"],
   "options_page": "options.html",
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Toggle Watchlist"
   },
   "content_scripts": [
     {
