@@ -80,14 +80,21 @@ function addToggleButton(cinemaConfig) {
   btn.id = 'pcc-watchlist-toggle';
   btn.className = 'button';
   btn.textContent = 'Toggle Watchlist Mode';
-  btn.style.background = '#222';
-  btn.style.color = '#fff';
+  // btn.style.all = 'unset'; // Reset all inherited styles
+  btn.style.background = '#111'; // Almost black background
+  btn.style.color = '#fff'; // White text
   btn.style.borderRadius = '6px';
   btn.style.padding = '8px 14px';
   btn.style.cursor = 'pointer';
   btn.style.display = 'inline-flex';
   btn.style.alignItems = 'center';
   btn.style.fontWeight = '500';
+  btn.style.fontSize = '16px';
+
+  // Explicitly unset ::after content
+  const style = document.createElement('style');
+  style.textContent = `#pcc-watchlist-toggle::after { content: none !important; }`;
+  document.head.appendChild(style);
 
   container.appendChild(btn);
   document.body.appendChild(container);
