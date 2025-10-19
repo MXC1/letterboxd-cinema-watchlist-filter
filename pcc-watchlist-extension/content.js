@@ -39,6 +39,16 @@ const cinemaConfigs = [
       parentEvent: "li.showing-listing__item",
       filmListContainer: "div.showing-listing"
     }
+  },
+  {
+    name: "vue-homepage",
+    url: "https://www.myvue.com/",
+    selectors: {
+      filmBlock: "li.film-cards-list-item",
+      title: "h3.card-title a",
+      parentEvent: "li.film-cards-list-item",
+      filmListContainer: "ul.film-cards-list"
+    }
   }
   // Add more cinema configurations here
 ];

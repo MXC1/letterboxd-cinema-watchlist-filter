@@ -8,7 +8,7 @@
         "https://princecharlescinema.com/whats-on/*",
         "https://www.cineworld.co.uk/cinemas/*",
         "https://www.odeon.co.uk/cinemas/*",
-        "https://www.myvue.com/cinema*"
+        "https://www.myvue.com/*"
         ],
   "action": {
   "default_popup": "popup.html"
@@ -23,7 +23,7 @@
         "https://princecharlescinema.com/whats-on/*",
         "https://www.cineworld.co.uk/cinemas/*",
         "https://www.odeon.co.uk/cinemas/*",
-        "https://www.myvue.com/cinema*"
+        "https://www.myvue.com/*"
         ],
       "js": ["content.js"]
     }
