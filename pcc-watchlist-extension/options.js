@@ -1,95 +1,90 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('options-form');
-    const textarea = document.getElementById('watchlist');
-    const fetchBtn = document.getElementById('fetch');
-    const statusDiv = document.getElementById('status');
-    const usernameInput = document.getElementById('username');
-    const lastFetchedDiv = document.getElementById('last-fetched');
+// options.js
+// Handles the options page functionality
 
-    // Load saved options
-    chrome.storage.sync.get(['watchlist', 'lbUsername', 'lastFetched'], (result) => {
-        if (result.watchlist) {
-            textarea.value = result.watchlist.join('\n');
-        }
-        if (result.lbUsername) {
-            usernameInput.value = result.lbUsername;
-        }
-        if (result.lastFetched) {
-            lastFetchedDiv.textContent = 'Last fetched: ' + result.lastFetched;
-        }
-    });
+// Loads saved options from Chrome storage
+function loadOptions() {
+  chrome.storage.sync.get(['watchlist', 'lbUsername', 'lastFetched'], (result) => {
+    if (result.watchlist) {
+      document.getElementById('watchlist').value = result.watchlist.join('\n');
+    }
+    if (result.lbUsername) {
+      document.getElementById('username').value = result.lbUsername;
+    }
+    if (result.lastFetched) {
+      document.getElementById('last-fetched').textContent = 'Last fetched: ' + result.lastFetched;
+    }
+  });
+}
 
-    // Save options on form submit
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const watchlist = document.getElementById('watchlist').value;
-        chrome.storage.sync.set({ watchlist }, () => {
-            alert('Options saved!');
-        });
-    });
+// Saves the watchlist to Chrome storage
+function saveOptions(event) {
+  event.preventDefault();
+  const watchlist = document.getElementById('watchlist').value.split('\n');
+  chrome.storage.sync.set({ watchlist }, () => {
+    alert('Options saved!');
+  });
+}
 
-    fetchBtn.addEventListener('click', async () => {
-        const username = usernameInput.value.trim();
-        console.log('Fetch button clicked. Username:', username);
-        if (!username) {
-            statusDiv.textContent = 'Please enter your Letterboxd username.';
-            console.warn('No username entered');
-            return;
-        }
-        statusDiv.textContent = 'Fetching watchlist...';
-        console.log('Fetching watchlist for:', username);
-        chrome.storage.sync.set({ lbUsername: username });
-        try {
-            let films = new Set();
-            for (let page = 1; page <= 10; page++) {
-                const url = `https://corsproxy.io/?https://letterboxd.com/${username}/watchlist/page/${page}`;
-                let res;
-                try {
-                    res = await fetch(url);
-                    console.log('Fetched URL:', url, 'Status:', res.status);
-                } catch (fetchErr) {
-                    console.error('Fetch error:', fetchErr, 'URL:', url);
-                    throw fetchErr;
-                }
-                if (!res.ok) {
-                    console.error('Non-OK response:', res.status, res.statusText, 'URL:', url);
-                    break;
-                }
-                const html = await res.text();
-                const div = document.createElement('div');
-                div.innerHTML = html;
-                let found = false;
-                div.querySelectorAll('div.react-component').forEach(el => {
-                    const name = el.getAttribute('data-item-name');
-                    if (name) {
-                        films.add(name.replace(/\s*\(\d{4}\)$/, ''));
-                        found = true;
-                    }
-                });
-                console.log('Page', page, 'Found:', found, 'Films so far:', films.size);
-                if (!found) {
-                    console.warn('No films found on page', page, 'URL:', url);
-                    break;
-                }
-            }
-            if (films.size === 0) {
-                statusDiv.textContent = 'No films found or profile is private.';
-                console.warn('No films found for user:', username);
-                return;
-            }
-            textarea.value = Array.from(films).join('\n');
-            const now = new Date();
-            const dateStr = now.toLocaleString();
-            chrome.storage.sync.set({ watchlist: Array.from(films), lastFetched: dateStr }, () => {
-                statusDiv.textContent = `Fetched and saved ${films.size} films!`;
-                lastFetchedDiv.textContent = 'Last fetched: ' + dateStr;
-                console.log('Fetched and saved films:', Array.from(films));
-                setTimeout(() => { statusDiv.textContent = ''; }, 2500);
-            });
-        } catch (e) {
-            statusDiv.textContent = 'Error fetching watchlist.';
-            console.error('Error fetching watchlist:', e);
-        }
-        console.log('StatusDiv:', statusDiv.textContent);
+// Fetches the watchlist from Letterboxd
+async function fetchWatchlist() {
+  const username = document.getElementById('username').value.trim();
+  const statusDiv = document.getElementById('status');
+
+  if (!username) {
+    statusDiv.textContent = 'Please enter your Letterboxd username.';
+    return;
+  }
+
+  statusDiv.textContent = 'Fetching watchlist...';
+  chrome.storage.sync.set({ lbUsername: username });
+
+  try {
+    const films = await fetchFilmsFromLetterboxd(username);
+    chrome.storage.sync.set({ watchlist: Array.from(films), lastFetched: new Date().toLocaleString() }, () => {
+      statusDiv.textContent = 'Watchlist fetched successfully!';
+      loadOptions();
     });
-});
+  } catch (error) {
+    statusDiv.textContent = 'Failed to fetch watchlist. Please try again.';
+    console.error('Error fetching watchlist:', error);
+  }
+}
+
+// Fetches films from Letterboxd pages
+async function fetchFilmsFromLetterboxd(username) {
+  const films = new Set();
+
+  for (let page = 1; page <= 10; page++) {
+    const url = `https://corsproxy.io/?https://letterboxd.com/${username}/watchlist/page/${page}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch page ${page}: ${response.statusText}`);
+    }
+
+    const html = await response.text();
+    const div = document.createElement('div');
+    div.innerHTML = html;
+
+    const filmTitles = Array.from(div.querySelectorAll('.film-title-wrapper a')).map((a) => a.textContent.trim());
+    filmTitles.forEach((title) => films.add(title));
+
+    if (filmTitles.length === 0) break; // Stop if no films are found on the page
+  }
+
+  return films;
+}
+
+// Sets up event listeners for the options page
+function setupEventListeners() {
+  document.getElementById('options-form').addEventListener('submit', saveOptions);
+  document.getElementById('fetch').addEventListener('click', fetchWatchlist);
+}
+
+// Initializes the options page
+function initializeOptionsPage() {
+  loadOptions();
+  setupEventListeners();
+}
+
+document.addEventListener('DOMContentLoaded', initializeOptionsPage);
