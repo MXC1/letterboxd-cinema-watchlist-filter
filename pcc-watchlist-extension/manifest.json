@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "PCC Watchlist Filter",
+  "name": "Letterboxd Cinema Watchlist Filter",
   "version": "1.0",
-  "description": "Toggle to show only films from your Letterboxd watchlist on Prince Charles Cinema's What's On page.",
+  "description": "Toggle to show only films from your Letterboxd watchlist on various cinema websites. Currently supports Odeon, Cineworld, Vue and the Prince Charles Cinema.",
   "permissions": ["storage", "scripting"],
   "host_permissions": [
         "https://princecharlescinema.com/whats-on/*",
@@ -11,11 +11,7 @@
         "https://www.myvue.com/*"
         ],
   "action": {
-  "default_popup": "popup.html"
-
-  },
-  "background": {
-    "service_worker": "background.js"
+    "default_popup": "popup.html"
   },
   "content_scripts": [
     {
@@ -27,5 +23,10 @@
         ],
       "js": ["content.js"]
     }
-  ]
+  ],
+  "icons": {
+    "16": "assets/letterboxd_icon.png",
+    "48": "assets/letterboxd_icon.png",
+    "128": "assets/letterboxd_icon.png"
+  }
 }

@@ -1,4 +1,4 @@
-// Content script for PCC Watchlist Filter
+// Content script for Letterboxd Cinema Watchlist Filter
 const cinemaConfigs = [
   {
     name: "prince-charles-cinema",
