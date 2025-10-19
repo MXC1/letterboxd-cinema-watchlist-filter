@@ -1,4 +1,18 @@
 // Content script for PCC Watchlist Filter
+const cinemaConfigs = [
+  {
+    name: "prince-charles-cinema",
+    url: "https://princecharlescinema.com/whats-on/",
+    selectors: {
+      filmBlock: "div.film_list-outer",
+      title: ".liveeventtitle",
+      parentEvent: ".jacro-event",
+      filmListContainer: ".jacrofilm-list"
+    }
+  }
+  // Add more cinema configurations here
+];
+
 function getWatchlist() {
   return new Promise((resolve) => {
     chrome.storage.sync.get(['watchlist'], (result) => {
@@ -11,14 +25,14 @@ function stripYear(title) {
   return title.replace(/\s*\(\d{4}\)$/, '');
 }
 
-function filterFilms(watchlist) {
-  const filmBlocks = document.querySelectorAll('div.film_list-outer');
+function filterFilms(watchlist, selectors) {
+  const filmBlocks = document.querySelectorAll(selectors.filmBlock);
   filmBlocks.forEach(filmBlock => {
-    const titleEl = filmBlock.querySelector('.liveeventtitle');
+    const titleEl = filmBlock.querySelector(selectors.title);
     if (!titleEl) return;
     const title = stripYear(titleEl.textContent.trim());
     if (!watchlist.includes(title)) {
-      const parentEvent = filmBlock.closest('.jacro-event');
+      const parentEvent = filmBlock.closest(selectors.parentEvent);
       if (parentEvent) {
         parentEvent.style.display = 'none';
       } else {
@@ -28,14 +42,16 @@ function filterFilms(watchlist) {
   });
 }
 
-function unfilterFilms() {
-  const filmBlocks = document.querySelectorAll('.jacro-event, .film_list-outer');
+function unfilterFilms(selectors) {
+  const filmBlocks = document.querySelectorAll(`${selectors.parentEvent}, ${selectors.filmBlock}`);
   filmBlocks.forEach(block => {
     block.style.display = '';
   });
 }
 
-function addToggleButton() {
+function addToggleButton(cinemaConfig) {
+  const { selectors } = cinemaConfig;
+
   // Only add if not already present
   if (document.getElementById('pcc-watchlist-toggle-container')) return;
 
@@ -70,14 +86,14 @@ function addToggleButton() {
   let lastWatchlist = [];
 
   // MutationObserver to re-apply filter if active
-  const filmListContainer = document.querySelector('.jacrofilm-list');
+  const filmListContainer = document.querySelector(selectors.filmListContainer);
   if (filmListContainer) {
     const observer = new MutationObserver(async () => {
       if (filtered) {
         if (!lastWatchlist.length) {
           lastWatchlist = await getWatchlist();
         }
-        filterFilms(lastWatchlist);
+        filterFilms(lastWatchlist, selectors);
       }
     });
     observer.observe(filmListContainer, { childList: true, subtree: true });
@@ -86,14 +102,15 @@ function addToggleButton() {
   btn.addEventListener('click', async () => {
     if (!filtered) {
       lastWatchlist = await getWatchlist();
-      filterFilms(lastWatchlist);
+      filterFilms(lastWatchlist, selectors);
       btn.textContent = 'Show All Films';
     } else {
-      unfilterFilms();
+      unfilterFilms(selectors);
       btn.textContent = 'Toggle Watchlist Mode';
     }
     filtered = !filtered;
   });
 }
 
-addToggleButton();
+// Initialize the extension for the first cinema configuration
+addToggleButton(cinemaConfigs[0]);
