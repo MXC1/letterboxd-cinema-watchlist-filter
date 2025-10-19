@@ -162,6 +162,13 @@ function addToggleButton(cinemaConfig) {
 // Initialize the extension for the appropriate cinema configuration based on the current URL
 function initializeExtension() {
   const currentUrl = window.location.href;
+
+  // Remove existing toggle button if present
+  const existingContainer = document.getElementById('pcc-watchlist-toggle-container');
+  if (existingContainer) {
+    existingContainer.remove();
+  }
+
   const matchingCinemaConfig = cinemaConfigs.find(config => {
     if (typeof config.url === 'string') {
       return currentUrl.startsWith(config.url);
