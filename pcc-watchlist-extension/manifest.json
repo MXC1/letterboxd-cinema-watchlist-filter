@@ -5,13 +5,12 @@
   "description": "Toggle to show only films from your Letterboxd watchlist on Prince Charles Cinema's What's On page.",
   "permissions": ["storage", "scripting"],
   "host_permissions": ["https://princecharlescinema.com/whats-on/*"],
-  "options_page": "options.html",
-  "background": {
-    "service_worker": "background.js",
-    "type": "module"
-  },
   "action": {
-    "default_title": "Toggle Watchlist"
+  "default_popup": "popup.html"
+
+  },
+  "background": {
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
