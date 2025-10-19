@@ -1,9 +1,11 @@
 // options.js
 // Handles the options page functionality
 
-// Loads saved options from Chrome storage
+// Adding logs to track execution
 function loadOptions() {
+  console.log('Loading options from storage');
   chrome.storage.sync.get(['watchlist', 'lbUsername', 'lastFetched'], (result) => {
+    console.log('Loaded options:', result);
     if (result.watchlist) {
       document.getElementById('watchlist').value = result.watchlist.join('\n');
     }
@@ -21,6 +23,7 @@ function saveOptions(event) {
   event.preventDefault();
   const watchlist = document.getElementById('watchlist').value.split('\n');
   chrome.storage.sync.set({ watchlist }, () => {
+    console.log('Options saved!');
     alert('Options saved!');
   });
 }
@@ -28,9 +31,11 @@ function saveOptions(event) {
 // Fetches the watchlist from Letterboxd
 async function fetchWatchlist() {
   const username = document.getElementById('username').value.trim();
+  console.log('Fetching watchlist for username:', username);
   const statusDiv = document.getElementById('status');
 
   if (!username) {
+    console.log('No username provided');
     statusDiv.textContent = 'Please enter your Letterboxd username.';
     return;
   }
@@ -40,13 +45,15 @@ async function fetchWatchlist() {
 
   try {
     const films = await fetchFilmsFromLetterboxd(username);
+    console.log('Fetched films:', films);
     chrome.storage.sync.set({ watchlist: Array.from(films), lastFetched: new Date().toLocaleString() }, () => {
+      console.log('Saved fetched watchlist to storage');
       statusDiv.textContent = 'Watchlist fetched successfully!';
       loadOptions();
     });
   } catch (error) {
-    statusDiv.textContent = 'Failed to fetch watchlist. Please try again.';
     console.error('Error fetching watchlist:', error);
+    statusDiv.textContent = 'Failed to fetch watchlist. Please try again.';
   }
 }
 
