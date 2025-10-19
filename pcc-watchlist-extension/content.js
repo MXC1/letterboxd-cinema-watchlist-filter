@@ -174,7 +174,7 @@ function initializeExtension() {
   if (matchingCinemaConfig) {
     addToggleButton(matchingCinemaConfig);
   } else {
-    console.warn("No matching cinema configuration found for the current URL.");
+    console.log("No matching cinema configuration found for the current URL.");
   }
 }
 
