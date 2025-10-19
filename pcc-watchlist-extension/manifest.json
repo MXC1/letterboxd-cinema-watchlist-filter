@@ -4,7 +4,10 @@
   "version": "1.0",
   "description": "Toggle to show only films from your Letterboxd watchlist on Prince Charles Cinema's What's On page.",
   "permissions": ["storage", "scripting"],
-  "host_permissions": ["https://princecharlescinema.com/whats-on/*"],
+  "host_permissions": [
+        "https://princecharlescinema.com/whats-on/*",
+        "https://www.cineworld.co.uk/cinemas/*"
+        ],
   "action": {
   "default_popup": "popup.html"
 
@@ -14,7 +17,10 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://princecharlescinema.com/whats-on/*"],
+      "matches": [
+        "https://princecharlescinema.com/whats-on/*",
+        "https://www.cineworld.co.uk/cinemas/*"
+        ],
       "js": ["content.js"]
     }
   ]

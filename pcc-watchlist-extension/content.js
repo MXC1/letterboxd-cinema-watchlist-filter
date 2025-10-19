@@ -9,6 +9,16 @@ const cinemaConfigs = [
       parentEvent: ".jacro-event",
       filmListContainer: ".jacrofilm-list"
     }
+  },
+  {
+    name: "cineworld",
+    url: "https://www.cineworld.co.uk/cinemas/",
+    selectors: {
+      filmBlock: "div.row.movie-row",
+      title: "h3.qb-movie-name",
+      parentEvent: "div.row.qb-movie",
+      filmListContainer: "div.events.col-xs-12"
+    }
   }
   // Add more cinema configurations here
 ];
@@ -112,5 +122,12 @@ function addToggleButton(cinemaConfig) {
   });
 }
 
-// Initialize the extension for the first cinema configuration
-addToggleButton(cinemaConfigs[0]);
+// Initialize the extension for the appropriate cinema configuration based on the current URL
+const currentUrl = window.location.href;
+const matchingCinemaConfig = cinemaConfigs.find(config => currentUrl.startsWith(config.url));
+
+if (matchingCinemaConfig) {
+  addToggleButton(matchingCinemaConfig);
+} else {
+  console.warn("No matching cinema configuration found for the current URL.");
+}
