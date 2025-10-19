@@ -32,7 +32,7 @@ const cinemaConfigs = [
   },
   {
     name: "vue",
-    url: "https://www.myvue.com/cinema",
+    url: /^https:\/\/www\.myvue\.com\/cinema\/.*\/whats-on.*$/,
     selectors: {
       filmBlock: "li.showing-listing__item",
       title: "span.film-heading__title",
@@ -42,7 +42,7 @@ const cinemaConfigs = [
   },
   {
     name: "vue-homepage",
-    url: "https://www.myvue.com/",
+    url: /^https:\/\/www\.myvue\.com\/?$/,
     selectors: {
       filmBlock: "li.film-cards-list-item",
       title: "h3.card-title a",
@@ -160,11 +160,39 @@ function addToggleButton(cinemaConfig) {
 }
 
 // Initialize the extension for the appropriate cinema configuration based on the current URL
-const currentUrl = window.location.href;
-const matchingCinemaConfig = cinemaConfigs.find(config => currentUrl.startsWith(config.url));
+function initializeExtension() {
+  const currentUrl = window.location.href;
+  const matchingCinemaConfig = cinemaConfigs.find(config => {
+    if (typeof config.url === 'string') {
+      return currentUrl.startsWith(config.url);
+    } else if (config.url instanceof RegExp) {
+      return config.url.test(currentUrl);
+    }
+    return false;
+  });
 
-if (matchingCinemaConfig) {
-  addToggleButton(matchingCinemaConfig);
-} else {
-  console.warn("No matching cinema configuration found for the current URL.");
+  if (matchingCinemaConfig) {
+    addToggleButton(matchingCinemaConfig);
+  } else {
+    console.warn("No matching cinema configuration found for the current URL.");
+  }
 }
+
+// Observe URL changes to reinitialize the extension
+let currentUrl = window.location.href;
+const urlObserver = new MutationObserver(() => {
+  if (window.location.href !== currentUrl) {
+    currentUrl = window.location.href;
+    initializeExtension();
+  }
+});
+
+urlObserver.observe(document.body, { childList: true, subtree: true });
+
+// Fallback for single-page applications (SPAs) or history API changes
+window.addEventListener('popstate', initializeExtension);
+window.addEventListener('pushstate', initializeExtension);
+window.addEventListener('replacestate', initializeExtension);
+
+// Initial call to set up the extension
+initializeExtension();
