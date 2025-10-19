@@ -7,7 +7,8 @@
   "host_permissions": [
         "https://princecharlescinema.com/whats-on/*",
         "https://www.cineworld.co.uk/cinemas/*",
-        "https://www.odeon.co.uk/cinemas/*"
+        "https://www.odeon.co.uk/cinemas/*",
+        "https://www.myvue.com/cinema*"
         ],
   "action": {
   "default_popup": "popup.html"
@@ -21,7 +22,8 @@
       "matches": [
         "https://princecharlescinema.com/whats-on/*",
         "https://www.cineworld.co.uk/cinemas/*",
-        "https://www.odeon.co.uk/cinemas/*"
+        "https://www.odeon.co.uk/cinemas/*",
+        "https://www.myvue.com/cinema*"
         ],
       "js": ["content.js"]
     }

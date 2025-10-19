@@ -29,6 +29,16 @@ const cinemaConfigs = [
       parentEvent: "li.v-showtime-picker-film-list__item",
       filmListContainer: "ul.v-showtime-picker-site-list"
     }
+  },
+  {
+    name: "vue",
+    url: "https://www.myvue.com/cinema",
+    selectors: {
+      filmBlock: "li.showing-listing__item",
+      title: "span.film-heading__title",
+      parentEvent: "li.showing-listing__item",
+      filmListContainer: "div.showing-listing"
+    }
   }
   // Add more cinema configurations here
 ];
