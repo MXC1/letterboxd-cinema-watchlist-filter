@@ -19,6 +19,16 @@ const cinemaConfigs = [
       parentEvent: "div.row.qb-movie",
       filmListContainer: "div.events.col-xs-12"
     }
+  },
+  {
+    name: "odeon",
+    url: "https://www.odeon.co.uk/cinemas/",
+    selectors: {
+      filmBlock: "li.v-showtime-picker-film-list__item",
+      title: "h2.v-film-title__text",
+      parentEvent: "li.v-showtime-picker-film-list__item",
+      filmListContainer: "ul.v-showtime-picker-site-list"
+    }
   }
   // Add more cinema configurations here
 ];
