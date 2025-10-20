@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Letterboxd Cinema Watchlist Filter",
-  "version": "1.0",
-  "description": "Toggle to show only films from your Letterboxd watchlist on various cinema websites. Currently supports Odeon, Cineworld, Vue and the Prince Charles Cinema.",
+  "version": "1.1",
+  "description": "Toggle to show only films from your Letterboxd watchlist on various cinema websites.",
   "permissions": ["storage"],
   "host_permissions": [
         "https://princecharlescinema.com/whats-on/*",
