@@ -8,7 +8,8 @@
         "https://princecharlescinema.com/whats-on/*",
         "https://www.cineworld.co.uk/cinemas/*",
         "https://www.odeon.co.uk/cinemas/*",
-        "https://www.myvue.com/*"
+        "https://www.myvue.com/*",
+        "https://letterboxd.com/*"
         ],
   "action": {
     "default_popup": "popup.html"

@@ -30,11 +30,14 @@ fetchBtn.addEventListener('click', async () => {
   chrome.storage.sync.set({ lbUsername: username });
   try {
     let films = new Set();
-    for (let page = 1; page <= 10; page++) {
-      const url = `https://corsproxy.io/?https://letterboxd.com/${username}/watchlist/page/${page}`;
+    for (let page = 1; page <= 50; page++) {
+      const url = `https://letterboxd.com/${username}/watchlist/page/${page}`;
       let res;
       try {
-        res = await fetch(url);
+        // credentials: 'omit' avoids sending the logged-in session cookie, which would
+        // cause Letterboxd to apply the account's saved watchlist visibility filters
+        // (Sort/Service/Genre/Decade) and silently return a truncated list.
+        res = await fetch(url, { credentials: 'omit' });
         console.log('Fetched URL:', url, 'Status:', res.status);
       } catch (fetchErr) {
         console.error('Fetch error:', fetchErr, 'URL:', url);
