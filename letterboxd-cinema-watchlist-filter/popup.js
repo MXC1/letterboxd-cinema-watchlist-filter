@@ -3,9 +3,13 @@ const fetchBtn = document.getElementById('fetch');
 const statusDiv = document.getElementById('status');
 const usernameInput = document.getElementById('username');
 const lastFetchedDiv = document.getElementById('last-fetched');
+const syncEnabledCheckbox = document.getElementById('sync-enabled');
+const connectGoogleBtn = document.getElementById('connect-google');
+const syncNowBtn = document.getElementById('sync-now');
+const calendarStatusDiv = document.getElementById('calendar-status');
 
 // Load watchlist and last fetched date on popup open
-chrome.storage.sync.get(['watchlist', 'lbUsername', 'lastFetched'], (result) => {
+chrome.storage.sync.get(['watchlist', 'lbUsername', 'lastFetched', 'syncEnabled'], (result) => {
   if (result.watchlist) {
     textarea.value = result.watchlist.join('\n');
   }
@@ -15,7 +19,54 @@ chrome.storage.sync.get(['watchlist', 'lbUsername', 'lastFetched'], (result) => 
   if (result.lastFetched) {
     lastFetchedDiv.textContent = 'Last fetched: ' + result.lastFetched;
   }
+  syncEnabledCheckbox.checked = !!result.syncEnabled;
 });
+
+refreshCalendarStatus();
+
+syncEnabledCheckbox.addEventListener('change', () => {
+  chrome.storage.sync.set({ syncEnabled: syncEnabledCheckbox.checked });
+});
+
+connectGoogleBtn.addEventListener('click', () => {
+  calendarStatusDiv.textContent = 'Opening Google sign-in...';
+  chrome.runtime.sendMessage({ type: 'pcc-connect-google' }, (response) => {
+    if (response && response.ok) {
+      calendarStatusDiv.textContent = 'Google account connected.';
+    } else {
+      calendarStatusDiv.textContent = 'Failed to connect: ' + (response && response.error);
+    }
+  });
+});
+
+syncNowBtn.addEventListener('click', () => {
+  calendarStatusDiv.textContent = 'Syncing...';
+  chrome.runtime.sendMessage({ type: 'pcc-sync-now' }, (response) => {
+    if (response && response.ok) {
+      const r = response.result;
+      if (r.skipped) {
+        calendarStatusDiv.textContent = r.skipped;
+      } else {
+        calendarStatusDiv.textContent =
+          `Synced ${r.matched} showing(s): ${r.created} added, ${r.skipped} already synced, ${r.deleted} removed` +
+          (r.failed ? `, ${r.failed} failed` : '') + '.';
+      }
+    } else {
+      calendarStatusDiv.textContent = 'Sync failed: ' + (response && response.error);
+    }
+  });
+});
+
+function refreshCalendarStatus() {
+  chrome.storage.local.get(['lastSync', 'lastSyncSummary'], (result) => {
+    if (result.lastSync) {
+      const r = result.lastSyncSummary || {};
+      const when = new Date(result.lastSync).toLocaleString();
+      calendarStatusDiv.textContent =
+        `Last synced: ${when} — ${r.matched || 0} showing(s), ${r.created || 0} added.`;
+    }
+  });
+}
 
 fetchBtn.addEventListener('click', async () => {
   const username = usernameInput.value.trim();

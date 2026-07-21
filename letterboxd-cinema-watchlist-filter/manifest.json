@@ -1,18 +1,28 @@
 {
   "manifest_version": 3,
   "name": "Letterboxd Cinema Watchlist Filter",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Toggle to show only films from your Letterboxd watchlist on various cinema websites.",
-  "permissions": ["storage"],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8PnhjYq5Zr+/jtJO1fLsShAuyF+QmiZ/hQeD74dUOJyZZ26Ns0otr+E71PfcMqdcp3bM8/VgG6vJt3lAUBG2VLNxYpSN45uyMHYNnqWNyuSDSTbCsOhSbcjRZP6fTYp5rMZykg3UvM0QInc4ehi+zPjPvlL6uVwyjH0H2iz4+0zoNQpfKWhs1tJouWBoFJFwELQ14uYKZ2ciO9SaduEgfvw8XyQPztnflSfkdmvpYRlcjJZ4wPCkYvz8pmTAmU1EzRXE/a01Sra98X+MUinlvUVoguXrQTBVH0Pwjq7tDEk6JoSzeOFjk1Nb4RyYn0oVn0RmO2IF5Y0pwQxxj5CVAQIDAQAB",
+  "permissions": ["storage", "alarms", "identity", "offscreen"],
   "host_permissions": [
         "https://princecharlescinema.com/whats-on/*",
         "https://www.cineworld.co.uk/cinemas/*",
         "https://www.odeon.co.uk/cinemas/*",
         "https://www.myvue.com/*",
-        "https://letterboxd.com/*"
+        "https://letterboxd.com/*",
+        "https://www.googleapis.com/*"
         ],
+  "oauth2": {
+    "client_id": "733806787009-2mc72epttaig2s2qo8ki0329jjii34je.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/calendar"]
+  },
   "action": {
     "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
