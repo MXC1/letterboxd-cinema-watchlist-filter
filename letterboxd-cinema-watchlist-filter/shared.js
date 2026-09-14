@@ -58,8 +58,14 @@ export function isWeekdayEvening(dayName, hour) {
   return WEEKDAYS.includes(dayName) && hour >= 17 && hour < 19;
 }
 
+// "1982 118mins USA (18) Horror / Thriller" -> 118
+export function parseRuntimeMinutes(runtimeText) {
+  const m = runtimeText.match(/(\d+)\s*mins/i);
+  return m ? parseInt(m[1], 10) : null;
+}
+
 // Walks a parsed Prince Charles Cinema "what's on" document and returns every
-// individual showing as a flat list: { title, dayName, dayOfMonth, monthIndex, hour, minute, bookingId, bookingHref }
+// individual showing as a flat list: { title, dayName, dayOfMonth, monthIndex, hour, minute, bookingId, bookingHref, filmHref, runtimeMinutes }
 export function extractShowingsFromDocument(doc) {
   const showings = [];
   const filmBlocks = doc.querySelectorAll('div.film_list-outer');
@@ -69,6 +75,10 @@ export function extractShowingsFromDocument(doc) {
     const titleEl = parentEvent.querySelector('.liveeventtitle');
     if (!titleEl) return;
     const title = stripYear(titleEl.textContent.trim());
+    const filmHref = titleEl.getAttribute('href');
+
+    const runtimeEl = filmBlock.querySelector('.running-time');
+    const runtimeMinutes = runtimeEl ? parseRuntimeMinutes(runtimeEl.textContent) : null;
 
     const perfList = filmBlock.querySelector('.performance-list-items');
     if (!perfList) return;
@@ -96,7 +106,9 @@ export function extractShowingsFromDocument(doc) {
           hour: time.hour,
           minute: time.minute,
           bookingId: hrefMatch[1],
-          bookingHref: linkEl.getAttribute('href')
+          bookingHref: linkEl.getAttribute('href'),
+          filmHref,
+          runtimeMinutes
         });
       }
     }

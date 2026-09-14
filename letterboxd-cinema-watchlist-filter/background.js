@@ -4,7 +4,7 @@ import { normalizeTitle, resolveYear, isWeekdayEvening, extractShowingsFromDocum
 
 const PCC_URL = 'https://princecharlescinema.com/whats-on/';
 const CALENDAR_NAME = 'Prince Charles Cinema';
-const EVENT_DURATION_MINUTES = 150;
+const FALLBACK_DURATION_MINUTES = 150;
 const SYNC_ALARM = 'pcc-calendar-sync';
 const SYNC_PERIOD_MINUTES = 360;
 
@@ -120,7 +120,11 @@ function toLocalIso(d) {
 function buildEvent(showing, matchReasons, referenceDate) {
   const year = resolveYear(showing.monthIndex, showing.dayOfMonth, referenceDate);
   const start = new Date(year, showing.monthIndex, showing.dayOfMonth, showing.hour, showing.minute);
-  const end = new Date(start.getTime() + EVENT_DURATION_MINUTES * 60000);
+  const durationMinutes = showing.runtimeMinutes || FALLBACK_DURATION_MINUTES;
+  const end = new Date(start.getTime() + durationMinutes * 60000);
+  const durationNote = showing.runtimeMinutes
+    ? `Film runtime: ${durationMinutes} min.`
+    : `Runtime unavailable — end time is estimated (~${durationMinutes} min).`;
 
   return {
     id: `pcc${showing.bookingId}`,
@@ -128,8 +132,8 @@ function buildEvent(showing, matchReasons, referenceDate) {
     location: 'Prince Charles Cinema, 7 Leicester Pl, London WC2H 7BY',
     description:
       `Matched: ${matchReasons.join(', ')}\n` +
-      `Booking: https://princecharlescinema.com${showing.bookingHref}\n\n` +
-      `End time is estimated (~${EVENT_DURATION_MINUTES} min) — check the listing for the exact runtime.\n\n` +
+      `Film info: ${showing.filmHref}\n\n` +
+      `${durationNote} Trailers/ads and Q&As may extend the actual end time — check the listing for details.\n\n` +
       `Auto-synced by Letterboxd Cinema Watchlist Filter.`,
     start: { dateTime: toLocalIso(start), timeZone: 'Europe/London' },
     end: { dateTime: toLocalIso(end), timeZone: 'Europe/London' },
