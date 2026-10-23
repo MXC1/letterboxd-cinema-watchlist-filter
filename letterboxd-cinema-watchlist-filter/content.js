@@ -4,6 +4,7 @@ const cinemaConfigs = [
   {
     name: "prince-charles-cinema",
     url: "https://princecharlescinema.com/whats-on/",
+    weekdayFilter: true,
     selectors: {
       filmBlock: "div.film_list-outer",
       title: ".liveeventtitle",
@@ -49,6 +50,23 @@ const cinemaConfigs = [
       title: "h3.card-title a",
       parentEvent: "li.film-cards-list-item",
       filmListContainer: "ul.film-cards-list"
+    }
+  },
+  {
+    // FilmHose is a React SPA with unclassed markup: each title is a collapsed row
+    // (<span>▶</span><strong>Title</strong><span>(N showings)</span>) whose showtimes
+    // ("Sun 25 Oct 7:20 PM · Venue · Title") only render once expanded.
+    name: "filmhose",
+    url: "https://filmhose.uk/titles",
+    selectors: {
+      filmBlock: "div:has(> div > div > strong)",
+      title: "strong",
+      parentEvent: "div:has(> div > div > strong)",
+      filmListContainer: "div:has(> div > div > div > strong)"
+    },
+    expand: block => {
+      const row = block.querySelector('strong')?.parentElement;
+      if (row && row.firstElementChild?.textContent.trim() === '▶') row.click();
     }
   }
   // Add more cinema configurations here
@@ -111,27 +129,10 @@ function hasWeekdayEveningShowtime(element) {
     return false;
   }
 
-  // Fallback: regex on textContent for other cinema sites
-  const text = element.textContent;
-  const showtimeRegex = /(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+\d+\w*\s+\w+[\s\S]{0,500}?(\d{1,2}):(\d{2})\s*(AM|PM)/gi;
-  let match;
-  while ((match = showtimeRegex.exec(text)) !== null) {
-    const day = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
-    const hours = parseInt(match[2]);
-    const period = match[4].toUpperCase();
-
-    let hour24 = hours;
-    if (period === 'PM' && hours !== 12) hour24 += 12;
-    if (period === 'AM' && hours === 12) hour24 = 0;
-
-    if (WEEKDAYS.includes(day) && hour24 >= 17 && hour24 < 19) {
-      return true;
-    }
-  }
   return false;
 }
 
-function applyFilters(filterState, selectors) {
+function applyFilters(filterState, selectors, expand) {
   // First, show all films
   const allBlocks = document.querySelectorAll(`${selectors.parentEvent}, ${selectors.filmBlock}`);
   allBlocks.forEach(block => {
@@ -155,6 +156,7 @@ function applyFilters(filterState, selectors) {
 
     // Weekday evening filter: search in filmBlock (contains the showtimes), not parentEvent
     if (filterState.timeActive) {
+      if (expand) expand(filmBlock); // showtimes only exist in the DOM once expanded
       if (!hasWeekdayEveningShowtime(filmBlock)) {
         parentEvent.style.display = 'none';
       }
@@ -163,7 +165,7 @@ function applyFilters(filterState, selectors) {
 }
 
 function addToggleButton(cinemaConfig) {
-  const { selectors } = cinemaConfig;
+  const { selectors, expand } = cinemaConfig;
 
   // Only add if not already present
   if (document.getElementById('pcc-watchlist-toggle-container')) return;
@@ -215,7 +217,8 @@ function addToggleButton(cinemaConfig) {
   document.head.appendChild(style);
 
   container.appendChild(btn);
-  container.appendChild(timeBtn);
+  // Showtime parsing only exists for some sites, so only offer the filter there
+  if (cinemaConfig.weekdayFilter) container.appendChild(timeBtn);
   document.body.appendChild(container);
 
   const filterState = {
@@ -226,7 +229,7 @@ function addToggleButton(cinemaConfig) {
   };
 
   // MutationObserver to re-apply filters if active
-  const filmListContainer = document.querySelector(selectors.filmListContainer);
+  const filmListContainer = document.querySelector(selectors.filmListContainer) || (expand ? document.body : null);
   if (filmListContainer) {
     const observer = new MutationObserver(async () => {
       if (filterState.watchlistActive || filterState.timeActive) {
@@ -234,7 +237,7 @@ function addToggleButton(cinemaConfig) {
           filterState.watchlist = await getWatchlist();
           filterState.normalizedWatchlist = filterState.watchlist.map(normalizeTitle);
         }
-        applyFilters(filterState, selectors);
+        applyFilters(filterState, selectors, expand);
       }
     });
     observer.observe(filmListContainer, { childList: true, subtree: true });
@@ -251,7 +254,7 @@ function addToggleButton(cinemaConfig) {
       btn.textContent = 'Toggle Watchlist Mode';
       btn.classList.remove('active');
     }
-    applyFilters(filterState, selectors);
+    applyFilters(filterState, selectors, expand);
   });
 
   timeBtn.addEventListener('click', () => {
@@ -266,7 +269,7 @@ function addToggleButton(cinemaConfig) {
       timeBtn.textContent = 'Weekday 17-19';
       timeBtn.classList.remove('active');
     }
-    applyFilters(filterState, selectors);
+    applyFilters(filterState, selectors, expand);
   });
 }
 

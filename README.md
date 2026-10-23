@@ -3,7 +3,7 @@
 Letterboxd Cinema Watchlist Filter is a Chrome extension that enhances your movie-going experience by filtering the "What's On" pages of popular cinema websites to show only films from your Letterboxd watchlist.
 
 ## Features
-- **Cinema Support**: Works with Prince Charles Cinema, Cineworld, Odeon, and Vue.
+- **Cinema Support**: Works with Prince Charles Cinema, Cineworld, Odeon, Vue, and FilmHose (titles page).
 - **Letterboxd Integration**: Fetches your watchlist directly from your Letterboxd account.
 - **Custom Filtering**: Filters cinema listings to display only movies in your watchlist.
 - **Google Calendar Sync**: Automatically adds Prince Charles Cinema showings that are on your
@@ -31,6 +31,7 @@ the Google Calendar OAuth setup below.
 - [Cineworld](https://www.cineworld.co.uk/cinemas/)
 - [Odeon](https://www.odeon.co.uk/cinemas/)
 - [Vue](https://www.myvue.com/)
+- [FilmHose](https://filmhose.uk/titles)
 
 ## Google Calendar Sync Setup
 

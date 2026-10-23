@@ -10,6 +10,7 @@
         "https://www.cineworld.co.uk/cinemas/*",
         "https://www.odeon.co.uk/cinemas/*",
         "https://www.myvue.com/*",
+        "https://filmhose.uk/titles*",
         "https://letterboxd.com/*",
         "https://www.googleapis.com/*"
         ],
@@ -30,7 +31,8 @@
         "https://princecharlescinema.com/whats-on/*",
         "https://www.cineworld.co.uk/cinemas/*",
         "https://www.odeon.co.uk/cinemas/*",
-        "https://www.myvue.com/*"
+        "https://www.myvue.com/*",
+        "https://filmhose.uk/titles*"
         ],
       "js": ["content.js"]
     }
