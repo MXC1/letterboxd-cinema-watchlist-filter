@@ -7,6 +7,12 @@ const CALENDAR_NAME = 'Prince Charles Cinema';
 const FALLBACK_DURATION_MINUTES = 150;
 const SYNC_ALARM = 'pcc-calendar-sync';
 const SYNC_PERIOD_MINUTES = 360;
+const MIN_REQUEST_INTERVAL_MS = 500;
+const MAX_RETRIES = 5;
+const BASE_BACKOFF_MS = 1000;
+const MAX_BACKOFF_MS = 10000;
+const RATE_LIMIT_REASONS = ['rateLimitExceeded', 'userRateLimitExceeded'];
+let lastRequestAt = 0;
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create(SYNC_ALARM, { periodInMinutes: SYNC_PERIOD_MINUTES, delayInMinutes: 1 });
@@ -50,15 +56,40 @@ function getAuthToken(interactive) {
   });
 }
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+async function isRateLimited(res) {
+  if (res.status === 429) return true;
+  if (res.status !== 403) return false;
+  try {
+    const body = await res.clone().json();
+    return (body.error?.errors || []).some(e => RATE_LIMIT_REASONS.includes(e.reason));
+  } catch {
+    return false;
+  }
+}
+
+// Serialises Calendar API traffic to one request per MIN_REQUEST_INTERVAL_MS and retries
+// rate-limited responses with exponential backoff (kept under the ~30s service worker idle limit).
 async function apiFetch(token, url, options = {}) {
-  return fetch(url, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  });
+  for (let attempt = 0; ; attempt++) {
+    const wait = lastRequestAt + MIN_REQUEST_INTERVAL_MS - Date.now();
+    if (wait > 0) await sleep(wait);
+    lastRequestAt = Date.now();
+
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (attempt >= MAX_RETRIES || !(await isRateLimited(res))) return res;
+    const backoff = Math.min(BASE_BACKOFF_MS * 2 ** attempt, MAX_BACKOFF_MS);
+    await sleep(backoff + Math.random() * 500);
+  }
 }
 
 async function ensureOffscreenDocument() {
@@ -167,9 +198,14 @@ async function runSync() {
   const newIds = new Set(matched.map(m => `pcc${m.showing.bookingId}`));
   const { syncedEventIds = [] } = await chrome.storage.local.get(['syncedEventIds']);
 
-  let created = 0, skipped = 0, failed = 0, deleted = 0;
+  let created = 0, failed = 0, deleted = 0;
+  const confirmedIds = new Set(syncedEventIds.filter(id => newIds.has(id)));
+  let skipped = confirmedIds.size;
+  let rateLimitedOut = false;
 
   for (const { showing, reasons } of matched) {
+    if (confirmedIds.has(`pcc${showing.bookingId}`)) continue;
+
     const event = buildEvent(showing, reasons, referenceDate);
     const insertRes = await apiFetch(
       token,
@@ -178,26 +214,46 @@ async function runSync() {
     );
     if (insertRes.status === 200 || insertRes.status === 201) {
       created++;
+      confirmedIds.add(event.id);
     } else if (insertRes.status === 409) {
-      skipped++; // already synced previously
+      skipped++; // already on the calendar
+      confirmedIds.add(event.id);
     } else {
       failed++;
+      const limited = await isRateLimited(insertRes);
       console.error('[LBFilter] Failed to insert event', event.id, insertRes.status, await insertRes.text());
+      if (limited) {
+        // Still limited after all retries: stop and let the next scheduled sync pick up the rest.
+        rateLimitedOut = true;
+        break;
+      }
     }
   }
 
+  // Keep stale ids whose delete didn't happen so the next sync retries them instead of orphaning the event.
   const staleIds = syncedEventIds.filter(id => !newIds.has(id));
+  const pendingDeleteIds = [];
   for (const id of staleIds) {
+    if (rateLimitedOut) {
+      pendingDeleteIds.push(id);
+      continue;
+    }
     const delRes = await apiFetch(
       token,
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(id)}`,
       { method: 'DELETE' }
     );
-    if (delRes.status === 204 || delRes.status === 410 || delRes.status === 404) deleted++;
+    if (delRes.status === 204 || delRes.status === 410 || delRes.status === 404) {
+      deleted++;
+    } else {
+      pendingDeleteIds.push(id);
+      console.error('[LBFilter] Failed to delete event', id, delRes.status);
+      if (await isRateLimited(delRes)) rateLimitedOut = true;
+    }
   }
 
   await chrome.storage.local.set({
-    syncedEventIds: Array.from(newIds),
+    syncedEventIds: [...confirmedIds, ...pendingDeleteIds],
     lastSync: new Date().toISOString(),
     lastSyncSummary: { matched: matched.length, created, skipped, failed, deleted }
   });
